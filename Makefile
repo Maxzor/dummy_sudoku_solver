@@ -1,12 +1,12 @@
-sudo : sudo.o chaine.o
-	cc -o sudo sudo.o chaine.o
+sudoku : sudoku.o mat_string.o
+	cc -o sudoku sudoku.o mat_string.o
 
-sudo.o : sudo.c sudo.h chaine.h
-	cc -c sudo.c
+sudoku.o : sudoku.c sudoku.h mat_string.h
+	cc -c sudoku.c
 
-chaine.o : chaine.c chaine.h
-	cc -c chaine.c
+mat_string.o : mat_string.c mat_string.h
+	cc -c mat_string.c
 
 clean :
-	rm -f sudo *.o
+	rm -f sudoku *.o
 

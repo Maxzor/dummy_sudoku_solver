@@ -1,0 +1,18 @@
+# Notre permiere matrice de test
+# E2L le 27 mai 2017
+# Matrice 9x9
+# apres la fin de ligne c'est vide !
+#
+8
+**36
+*7**9*2
+*5***7
+****457
+***1***3
+**1****68
+**85***1
+*9****4
+
+
+
+
