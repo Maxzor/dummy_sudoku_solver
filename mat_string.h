@@ -1,6 +1,6 @@
 /* mat_string.h : defining structures and basic matrix <> string functions */
 
-#define Version "1.00"
+#define Version "2.5"
 
 /* unidirectional string chaining */
 

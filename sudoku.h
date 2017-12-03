@@ -1,7 +1,6 @@
-/* sudo.h : header file du projet sudoku */
+/* sudo.h : sudoku project header */
 
-#define Version "1.00"
+#define Version "2.5"
 
-#define NBC 9  /* nb de cases du cote de la matrice (dimension) */
-
+#define NBC 9  /* number of cells in a side of the grid */
 

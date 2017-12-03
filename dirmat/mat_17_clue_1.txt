@@ -1,8 +1,4 @@
-#
-#
-# Matrice 9x9
-# apres la fin de ligne c'est vide !
-#
+# After end of line, cells are empty!
 *******1
 *****2**3
 ***4
@@ -12,7 +8,3 @@
 *5****2
 ****8**4
 *3*91
-
-
-
-

@@ -1,8 +1,4 @@
-# Notre permiere matrice de test
-# E2L le 27 mai 2017
-# Matrice 9x9
-# apres la fin de ligne c'est vide !
-#
+# After end of line, cells are empty!
 *
 *****3*85
 **1*2
@@ -12,7 +8,3 @@
 5******73
 **2*1
 ****4***9
-
-
-
-

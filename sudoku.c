@@ -1,4 +1,4 @@
-/* sudo.c : main part of the sudoku program */
+/* sudoku.c : main part of the sudoku program */
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -6,15 +6,20 @@
 #include "mat_string.h"
 
 
-//#define TRACE_NBPOSSCOL
+//#define TRACE_OPTINSUBSET
 //#define TRACE_DUPLIMAT
 
 
 
 static char MAT[NBC*NBC];  /* our 9x9 matrix */
-
 static char * AdM = MAT; /* current matrix adress */
-
+static char subset_table[3][7]={"row","column","submat"};
+static int sm_array[9][4]={ /* limits of submats :  */
+		/* fr first row, lr last row, fc first column, lc last column  */
+		{0,3,0,3},{0,3,3,6},{0,3,6,9}, /* upper band */
+		{3,6,0,3},{3,6,3,6},{3,6,6,9},
+		{6,9,0,3},{6,9,3,6},{6,9,6,9}  /* lower band */
+};
 /* function creating a new matrix from the current one */
 char * new_mat(void)
 {
@@ -145,153 +150,162 @@ int is_in_submat(int V, int N)
 int fc, lc, fr, lr, /* first col, last col, first row, last row */
     i, j;           /* parsing indexes */
    /* setting up limits */
-   switch(N) {
-      case 1 :
-         fr=0; lr=3;
-         fc=0; lc=3;
-         break;
-      case 2 :
-         fr=0; lr=3;
-         fc=3; lc=6;
-         break;
-      case 3 :
-         fr=0; lr=3;
-         fc=6; lc=9;
-         break;
-      case 4 :
-         fr=3; lr=6;
-         fc=0; lc=3;
-         break;
-      case 5 :
-         fr=3; lr=6;
-         fc=3; lc=6;
-         break;
-      case 6 :
-         fr=3; lr=6;
-         fc=6; lc=9;
-         break;
-      case 7 :
-         fr=6; lr=9;
-         fc=0; lc=3;
-         break;
-      case 8 :
-         fr=6; lr=9;
-         fc=3; lc=6;
-         break;
-      case 9 :
-         fr=6; lr=9;
-         fc=6; lc=9;
-         break;
-   }
+   fc=sm_array[N-1][2];
+   lc=sm_array[N-1][3];
+   fr=sm_array[N-1][0];
+   lr=sm_array[N-1][1];
+
    for (i=fc; i<lc; i++)
        for (j=fr; j<lr; j++)
-           if (AdM[(j*9)+i] == '0'+V) return 1;
+           if (AdM[(j*NBC)+i] == '0'+V) return 1;
    return 0;
 }
 
-int is_empty(int L, int C)
+int is_in_subset(int S, int N, int V)
 {
-  if (AdM[(L*9)+C] == ' ') return 1;
-  return 0;
+	if (S==1) return is_in_row(V,N);
+	else if (S==2) return is_in_col(V,N);
+	else if (S==3) return is_in_submat(V,N);
+}
+
+int is_empty(int S, int N, int i)
+{
+int r,c;
+	if (S==1){
+		if (AdM[((N-1)*NBC)+i] == ' ') return 1;
+	}
+	else if (S==2){
+		if (AdM[(i*NBC)+N-1] == ' ') return 1;
+	}
+	else if (S==3){
+		r=sm_array[N-1][0]+i/3;
+		c=sm_array[N-1][2]+i%3;
+		if (AdM[r*NBC+c] == ' ') return 1;
+	}
+	return 0;
 }
 
 /* Function evaluating the number of possible cases */
-int nb_poss_col(int V, int N, int * T)
+int options_in_subset(int S, int N, int * T, int V)
 /*
-  V value to fill
-  N column number
+  S subset
+  N subset number
   T table of possible entries
+  V value to fill
+
 *************************************** */
 {
-int i, Nb=0, sm;
-   /* parsing all the rows for that column */
+int i,R,C, Nb=0, sm;
+   /* parsing all the subset position for that subset number */
+   /* i.e. "for row subset (S==1) number N==3, search through */
+   /* all columns and sub-matrices" */
    for (i=0; i<NBC; i++) {
-      if (! is_empty(i,N-1)) continue;
-#ifdef TRACE_NBPOSSCOL
-      printf("    NBPOSSCOL : Cell R=%d is empty !\n",i+1);
-#endif
-      if (is_in_row(V,i+1)) continue;
-#ifdef TRACE_NBPOSSCOL
-      printf("    NBPOSSCOL : %d is not in row %d !\n",V,i+1);
-#endif
-      sm = submat_nb(i+1,N);
-      if (is_in_submat(V,sm)) continue;
-#ifdef TRACE_NBPOSSCOL
-      printf("    NBPOSSCOL : %d is not in submatrix %d !\n",V,sm);
-#endif
+	   	if (! is_empty(S,N,i)) continue;
+
+		if (S==1){
+			if (is_in_col(V,i+1)) continue;
+			sm = submat_nb(N,i+1);
+			if (is_in_submat(V,sm)) continue;
+		}
+		else if (S==2){
+			if (is_in_row(V,i+1)) continue;
+			sm = submat_nb(i+1,N);
+			if (is_in_submat(V,sm)) continue;
+		}
+		else if (S==3){
+			R=sm_array[N-1][0]+i/3+1;
+			C=sm_array[N-1][2]+i%3+1;
+			if (is_in_row(V,R)) continue;
+			if (is_in_col(V,C)) continue;
+		}
       T[Nb]=i;
       Nb++;
    }
    return Nb;
 }
 
-void fill_mat(int L, int C, int V) /* filling function */
+void fill_mat(int S, int N, int T, int V) /* filling function */
 {
- AdM[((L-1)*9)+C-1] = '0' + V;
+ if (S==1) {AdM[((N-1)*9)+T-1] = '0' + V;}
+ if (S==2) {AdM[((T-1)*9)+N-1] = '0' + V;}
+ if (S==3) {
+	 AdM[(sm_array[N-1][0]+(T-1)/3)*NBC+(sm_array[N-1][2]+(T-1)%3)] = '0' + V;
+ }
 }
 
 int solve(void) /* function to solve the grid */
 {
-int V,N, Ok, n, T[NBC];
+int S,N,V, Ok, n, T[NBC];
+int gcnt = 0;
 char * NewM;
    while(1) {
-     for (V=1; V<NBC+1; V++) {/* iterating values to fill, from 1 to 9 */
+     for (V=1; V<NBC+1; V++) { /* iterating values to fill, from 1 to 9 */
        Ok=0;
-       for (N=1; N<NBC+1; N++) { /* parsing columns */
-#ifdef TRACE_NBPOSSCOL
-          printf("Investigating: V=%d N=%d\n", V, N);
+       for (S=1; S<4; S++) { /* loop for different subsets : row, column, number */
+		   for (N=1; N<NBC+1; N++) { /* parsing columns */
+#ifdef TRACE_OPTINSUBSET
+          printf("Investigating: V=%d %s N=%d\n", V, subset_table[S-1], N);
 #endif
-          if (is_in_col(V,N)) continue;
-#ifdef TRACE_NBPOSSCOL
-          printf("   %d missing in column %d\n", V, N);
+			  if (is_in_subset(S,N,V)) continue;
+#ifdef TRACE_OPTINSUBSET
+          printf(" Value %d missing in %s %d\n", V, subset_table[S-1], N);
 #endif
-          /* checking if value V can be put in column N */
-          n = nb_poss_col(V, N, T);
-#ifdef TRACE_NBPOSSCOL
-          printf("   For value V=%d, there are %d options in column %d\n", V, n, N);
+			  /* checking if value V can be put in subset number N */
+			  n = options_in_subset(S, N, T, V);
+#ifdef TRACE_OPTINSUBSET
+          printf("  There are %d options in %s %d\n", n, subset_table[S-1], N);
 #endif
-          if (n==0) previous_mat(); /* exploring this matrix has failed, back */
-          if (n==1) { /* we are sure this value goes here */
-             fill_mat(*T+1,N,V);
-#ifdef TRACE_NBPOSSCOL
-          printf("   We put value V=%d in row R=%d and column C=%d\n", V, *T+1, N);
+			  if (n==0) previous_mat(); /* exploring this matrix has failed, back */
+			  if (n==1) { /* we are sure this value goes here */
+				 fill_mat(S,N,*T+1,V);
+#ifdef TRACE_OPTINSUBSET
+          printf("   We put value V=%d in %s %d position %d\n", V, subset_table[S-1], N, *T+1);
           display_mat();
 #endif
-             Ok=1; break; /* means we filled one cell ! */
-          }
+				 Ok=1; break; /* means we filled one cell ! */
+			  }
+		   }
+		   /* carry_on_test("Moving to next value"); */
+		   if (Ok) break;
        }
-       /* carry_on_test("Moving to next value"); */
        if (Ok) break;
      }
      /* do we go on the guess step? */
      if (Ok==0) { /* filling cases with 100% assurance failed : starting guess loop */
         for (V=1; V<NBC+1; V++) { /* parsing values */
-          for (N=1; N<NBC+1; N++) { /* parsing columns */
-             if (is_in_col(V,N)) continue;
-             /* checking if value V can be put in column N */
-             n = nb_poss_col(V, N, T);
-             if (n==0) previous_mat(); /* exploring this matrix has failed, back */
-             if (n==2) { /* using 50% probability guess */
-                NewM = new_mat(); /* creating new matrix */
-                fill_mat(*T+1,N,V); /* Filling second matrix with first value position */
+            for (S=1; S<4; S++) {
+			  for (N=1; N<NBC+1; N++) { /* parsing columns */
+				 if (is_in_subset(S,N,V)) continue;
+				 /* checking if value V can be put in column N */
+				 n = options_in_subset(S, N, T, V);
+				 if (n==0) previous_mat(); /* exploring this matrix has failed, back */
+				 if (n==2) { /* using 50% probability guess */
+					NewM = new_mat(); /* creating new matrix */
+					fill_mat(S,N,*T+1,V); /* Filling first matrix with first value position */
 #ifdef TRACE_DUPLIMAT
                 printf("Created new matrix. Displaying first matrix with first option:\n");
                 display_mat();
 #endif
-                add_string((void*)NewM);
-                AdM = NewM;
-                fill_mat(T[1]+1,N,V); /*filling second matrix with second value position*/
+					add_string((void*)NewM);
+					AdM = NewM;
+					gcnt++;
+					fill_mat(S,N,T[1]+1,V); /*filling second matrix with second value position*/
 #ifdef TRACE_DUPLIMAT
                 printf("Displaying second matrix with second option. :\n");
                 display_mat();
 #endif
-                Ok=1; break; /* this means we branched, returning to the beginning of the loop */
-             }
-          }
+					Ok=1; break; /* this means we branched, returning to the beginning of the loop */
+				 }
+			  }
+			  if (Ok) break;
+           }
+           if (Ok) break;
         }
      }
      if (Ok==0) {
     	 printf("This algorithm did its best ! :\n");
+    	 display_mat();
+    	 printf("%d 50%% proba guesses were made.\n", gcnt);
     	 break;
      }
    }
@@ -322,7 +336,7 @@ char * s = malloc(snprintf(NULL, 0, "%s%s", "./dirmat/", P[1]));
   init_string();
   add_string((void*)MAT);  /* add in string the matrix */
   display_mat();
-#ifdef TRACE_NBPOSSCOL
+#ifdef TRACE_OPTINSUBSET
   printf("Verifiying block numbers in the grid :\n");
   for (i=1;i<=NBC;i++) {
       for (j=1;j<=NBC;j++) printf("%d",submat_nb(i,j));
@@ -332,7 +346,6 @@ char * s = malloc(snprintf(NULL, 0, "%s%s", "./dirmat/", P[1]));
 #endif
 
   solve();
-  display_mat();
 
   return 0;
 }

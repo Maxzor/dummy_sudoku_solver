@@ -1,4 +1,4 @@
-/* mat_string.c : code de la librairie chainage general */
+/* mat_string.c : general matrix <> chaining string library */
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -29,7 +29,7 @@ int i=1;
 struct Elt * add_string(void * objet)
 {
 void * A;
-struct Elt *E, **W; /* W is a pointer to a pointer of element */
+struct Elt *E, **W; /* W is a pointer of pointer of element */
     if ((A = malloc(sizeof(struct Elt))) == NULL) {
        fprintf(stderr,"Malloc impossible ! Stopping !\n");
        exit(1);
@@ -46,7 +46,7 @@ struct Elt *E, **W; /* W is a pointer to a pointer of element */
 
 int del_string(void * objet)
 {
-struct Elt *E, **W; /* W is a pointer to a pointer of element */
+struct Elt *E, **W; /* W is a pointer of pointer of element */
     W = &Anchor;
     while (*W != END) {
         if ((*W)->obj == objet) { /* found it ! */
@@ -59,7 +59,7 @@ struct Elt *E, **W; /* W is a pointer to a pointer of element */
         }
         W = &((*W)->fol);
     }
-    return 0; /* objet not found */
+    return 0; /* object not found */
 }
 
 void * last_addr_string(void)
