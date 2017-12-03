@@ -44,10 +44,15 @@ Sudoku theory relies on the following concepts :
 - Topology of givens
 
 One team proved in recent years that the minimum amount of givens for a uniquely solvable classic 9*9 sudoku is 17.
-https://arxiv.org/PS_cache/arxiv/pdf/1201/1201.0749v1.pdf. It did so by exploring the whole sudoku space with a super computer ; a mathematic desmonstration is yet to be proposed.
+https://arxiv.org/PS_cache/arxiv/pdf/1201/1201.0749v1.pdf. It did so by exploring the whole sudoku search space with a super computer ; a mathematic desmonstration is yet to be proposed.
 
 See also :
 
 - https://en.wikipedia.org/wiki/Mathematics_of_Sudoku
 - https://en.wikipedia.org/wiki/Sudoku_solving_algorithms
 - white paper on a sudoku maker : https://sites.math.washington.edu/~morrow/mcm/team2280.pdf
+
+****Some wonder - given number/topology & guesses****
+
+This algorithm can solve some 17-clue sudokus with 0 guessing (branching/bruteforce). On the other hand Arto Inkala matrix takes 438 guesses and yet has a (plenty) 21 givens.
+Trying to answer "from where does the need for guesses arise ?", if not the biggest problem in maths, looks interesting to me.
