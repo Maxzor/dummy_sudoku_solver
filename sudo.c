@@ -3,10 +3,29 @@
 #include <stdlib.h>
 
 #include "sudo.h"
+#include "chaine.h"
 
 /*
 #define TRACE
 */
+
+static char MAT[NBC*NBC];  /* la matrice 9x9 */
+
+static char * AdM = MAT; /* adresse de la matrice en cours */
+
+/* fonction qui cree une nouvelle matrice a partir de celle en cours */
+char * new_matrice(void)
+{
+void * A;
+char * R;
+int i;
+     if ((A = malloc(NBC*NBC)) == NULL) {
+        perror("malloc"); exit(9);
+     }
+     R = (char*)A;
+     for (i=0; i<(NBC*NBC);i++) R[i] = AdM[i];
+     return R;
+}
 
 void finerr(char *m) /* fonction de fin d'erreur */
 {
@@ -31,9 +50,8 @@ char buf[LBUF]; /* voila un joli buffer */
 
 void init_mat(void)
 {
-int i,j;
-   for (i=0;i<NBC;i++)
-       for (j=0;j<NBC;j++) MAT[i][j] = ' '; /* on met des espaces partout */
+int i;
+   for (i=0;i<(NBC*NBC);i++) AdM[i] = ' '; /* on met des espaces partout */
    return;
 }
 
@@ -44,7 +62,7 @@ int i,j;
    printf("/---------\\\n");
    for (i=0;i<NBC;i++) {
        printf("|");
-       for (j=0;j<NBC;j++) printf("%c",MAT[i][j]); /* on affiche chaque elt */
+       for (j=0;j<NBC;j++) printf("%c",AdM[(i*NBC)+j]); /* on affiche chaque elt */
        printf("|\n");
    }
    printf("/---------\\\n");
@@ -69,7 +87,7 @@ int i=0,j;
             if (buf[j] > '9') return 1; /* erreur */
          }
          /* MAJ de la matrice */
-         MAT[i][j]=buf[j];
+         AdM[(i*NBC)+j]=buf[j];
       }
       /* on passe a la ligne suivante */
       i++;
@@ -99,7 +117,7 @@ int estPresentCol(int V, int N)
 {
 int i;
   for (i=0; i<NBC; i++)
-      if (MAT[i][N-1] == '0'+V) return 1;
+      if (AdM[(i*NBC)+N-1] == '0'+V) return 1;
   return 0;
 }
 
@@ -108,7 +126,7 @@ int estPresentLig(int V, int N)
 {
 int i;
   for (i=0; i<NBC; i++)
-      if (MAT[N-1][i] == '0'+V) return 1;
+      if (AdM[((N-1)*NBC)+i] == '0'+V) return 1;
   return 0;
 }
 
@@ -158,13 +176,13 @@ int cd, cf, ld, lf, /* col debut, col fin, ligne debut, ligne fin */
    }
    for (i=cd; i<cf; i++)
        for (j=ld; j<lf; j++)
-           if (MAT[j][i] == '0'+V) return 1;
+           if (AdM[(j*9)+i] == '0'+V) return 1;
    return 0;
 }
 
 int estVide(int L, int C)
 {
-  if (MAT[L][C] == ' ') return 1;
+  if (AdM[(L*9)+C] == ' ') return 1;
   return 0;
 }
 
@@ -201,7 +219,7 @@ int i, Nb=0, sm;
 /* les fonctions de remplissage */
 void rempliMat(int L, int C, int V)
 {
- MAT[L-1][C-1] = '0' + V;
+ AdM[((L-1)*9)+C-1] = '0' + V;
 }
 
 int resolution(void) /* fct qui resout la grille */
@@ -262,6 +280,8 @@ int i, j;
      return 3;
   }
   printf("La matrice est initialisee !\n");
+  chaine_init();             /* initialisation du chainage */
+  chaine_ajout((void*)MAT);  /* ajout dans le chainage de la matrice de depart */
   affiche_mat();
 #ifdef TRACE
   printf("Verification des no de sous-matrice :\n");
@@ -274,6 +294,11 @@ int i, j;
 
   resolution();
   affiche_mat();
+  /* pour tester la duplication */
+  AdM = new_matrice();
+  printf("Affichage de la copie de la matrice\n");
+  affiche_mat();
+
   return 0;
 }
 

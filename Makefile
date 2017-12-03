@@ -1,7 +1,12 @@
-sudo : sudo.c sudo.h
-	cc -o sudo sudo.c
-	# cc -DTRACE -o sudo sudo.c
+sudo : sudo.o chaine.o
+	cc -o sudo sudo.o chaine.o
+
+sudo.o : sudo.c sudo.h chaine.h
+	cc -c sudo.c
+
+chaine.o : chaine.c chaine.h
+	cc -c chaine.c
 
 clean :
-	rm -f sudo
+	rm -f sudo *.o
 
